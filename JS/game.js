@@ -70,9 +70,9 @@ var NFB = {
         
         // For to create extra space
         // Just to hide the address bar easily
-        if (NFB.android || NFB.ios) {
+        /*if (NFB.android || NFB.ios) {
             document.body.style.height = (window.innerHeight + 50) + "px";
-        }
+        }*/
 
         // Adding 'px' to the end of variables
 
