@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8">
+
+        <meta name="viewport" content="width=device-width, user-scalable=no, initial-scale=1, maximum-scale=1, user-scalable=0" />
+        <meta name="apple-mobile-web-app-capable" content="yes" />
+        <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+
+        <link rel="icon" href="GFX/icon.png" />
+        <link href="GFX/icon.png" rel="apple-touch-icon" />
+
+        <title>Not Flappy Bird</title>
+
+        <style type="text/css">
+            body {
+                margin: 0;
+                padding: 0;
+                background: #000;
+            }
+            canvas {
+                display: block;
+                margin: 0 auto;
+                image-rendering: -moz-crisp-edges;
+                image-rendering: -webkit-crisp-edges;
+                image-rendering: pixelated;
+                image-rendering: crisp-edges;
+            }
+        </style>
+    </head>
+    <body>
+        <canvas></canvas>
+        <div class="fade-box"></div>
+        <script src="JS/game.js"></script>
+    </body>
+</html>
