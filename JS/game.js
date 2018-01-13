@@ -50,7 +50,10 @@ var NFB = {
         }, 0);
         window.addEventListener("touchmove", function(e) {
             e.preventDefault();
-            NFB.Input.set(e.touches[0]);
+
+            if (Game.Status.room == 1) {
+                NFB.Input.set(e.touches[0]);
+            }
         }, false);
         window.addEventListener("touchend", function(e) {
             e.preventDefault();
@@ -59,7 +62,6 @@ var NFB = {
         // Now, to Resize!
         NFB.resize(); //!
 
-        Game.Init();
         Game.Update();
     },
 
@@ -70,9 +72,9 @@ var NFB = {
         
         // For to create extra space
         // Just to hide the address bar easily
-        /*if (NFB.android || NFB.ios) {
+        if (NFB.android || NFB.ios) {
             document.body.style.height = (window.innerHeight + 50) + "px";
-        }*/
+        }
 
         // Adding 'px' to the end of variables
 
@@ -120,17 +122,25 @@ NFB.Input = {
         this.x = (data.pageX - NFB.offset.left) / scale;
         this.y = (data.pageY - NFB.offset.top) / NFB. scale;
         this.tapped = true;
-
-        if (Game.Status.room == 0) {
-            if (NFB.Input.x >= 15 && NFB.Input.x <= 15 + Game.Objects.PlayButton[2]) {
-                if (NFB.Input.y >= NFB.Height - Game.Objects.Ground[3] - Game.Objects.PlayButton[3] && NFB.Input.y <= NFB.Height - Game.Objects.Ground[3]) {
-                    alert('Yeah... You can\'t really play the game yet... Just press "OK" to get rid of the pop-up...');
+        if (this.tapped == true) {
+            if (Game.Status.room == 0) {
+                if (NFB.Input.x >= 15 && NFB.Input.x <= 15 + Game.Objects.PlayButton[2]) {
+                    if (NFB.Input.y >= NFB.Height - Game.Objects.Ground[3] - Game.Objects.PlayButton[3] && NFB.Input.y <= NFB.Height - Game.Objects.Ground[3]) {
+                        Game.Bird.X = -30;
+                        Game.Status.GameStage = 0;
+                        Game.Status.room = 1;
+                    }
                 }
-            }
 
-            if (NFB.Input.x >= 75 && NFB.Input.x <= 126) {
-                if (NFB.Input.y >= 172 && NFB.Input.y <= 200) {
-                    alert("The Settings are in Development");
+                if (NFB.Input.x >= 75 && NFB.Input.x <= 126) {
+                    if (NFB.Input.y >= 172 && NFB.Input.y <= 200) {
+                        alert("The Settings are in Development");
+                    }
+                }
+            } else if (Game.Status.room == 1) {
+                if (this.y >= 32 && this.y <= 167) {
+                    Game.Pipes.Y = this.y;
+                    Game.Status.GameStage = 1;
                 }
             }
         }
@@ -146,7 +156,9 @@ var Game = {
     Status: {
         room: 0,
         score: 0,
-        highscore: 0
+        highscore: 0,
+        GameStage: 0, // Haven't Started | Started | Game Over
+        gotPoint: false
     },
 
     Objects: {
@@ -157,30 +169,41 @@ var Game = {
         PlayButton: [354, 118, 52, 29],
         SettingsButton: [414, 118, 52, 29],
 
-        CreditsStuff: [[433, 148, 78, 5], [451, 92, 60, 5]], // The person who made this game, the origonal sprites
-        Pipe: [[56, 323, 26, 160], [84, 323, 26, 160]], // Top Pipe, Bottom Pipe
+        CreditsStuff: [[433, 148, 78, 5], [451, 92, 60, 5]], // The person who made this game | the original sprites
+        Pipe: [[56, 323, 26, 160], [84, 323, 26, 160]], // Top Pipe | Bottom Pipe
+        Signs: [[295, 59, 92, 25], [395, 59, 96, 21]], // Get Ready Sign | Game Over 
+        BirdSprites: [[3, 491, 17, 12], [31, 491, 17, 12], [59, 491, 17, 12]]
     },
 
     Pipes: {
-        X: NFB.Height / 2 - 30,
+        Y: NFB.Height / 2 - 30,
+    },
+
+    Bird: {
+        X: -30,
+        Y: NFB.Height / 2 - 35,
+        AnimFrame: 0,
+        CurrentSprite: 0,
+        FlapDirection: "Up",
     }
 }
 
 Game.Objects.SpriteSheet.src = "GFX/Spritesheet.png";
 
-Game.Init = function() {
-
-}
-
 Game.Update = function() {
     NFB.Draw.image(Game.Objects.SpriteSheet, 0, 0, Game.Objects.Background);
 
     if (Game.Status.room == 0) {
-        NFB.Draw.image(Game.Objects.SpriteSheet, NFB.Width / 2 - (Game.Objects.Pipe[0][2] / 2), Game.Pipes.X - 20 - Game.Objects.Pipe[0][3], Game.Objects.Pipe[0]);
-        NFB.Draw.image(Game.Objects.SpriteSheet, NFB.Width / 2 - (Game.Objects.Pipe[1][2] / 2), Game.Pipes.X + 20, Game.Objects.Pipe[1]);
+
+        Game.Pipes.X = NFB.Height / 2 - 30;
+
+        NFB.Draw.image(Game.Objects.SpriteSheet, NFB.Width / 2 - (Game.Objects.Pipe[0][2] / 2), Game.Pipes.Y - 20 - Game.Objects.Pipe[0][3], Game.Objects.Pipe[0]);
+        NFB.Draw.image(Game.Objects.SpriteSheet, NFB.Width / 2 - (Game.Objects.Pipe[1][2] / 2), Game.Pipes.Y + 20, Game.Objects.Pipe[1]);
 
         NFB.Draw.image(Game.Objects.SpriteSheet, 0, NFB.Height - Game.Objects.Ground[3], Game.Objects.Ground);
         // I am putting the Ground over the pipes, so that it doesn't look like the pipes are in front of the game
+
+        NFB.Draw.image(Game.Objects.SpriteSheet, Game.Bird.X, Game.Bird.Y, Game.Objects.BirdSprites[Game.Bird.CurrentSprite]); // Now the Bird!
 
         //--------------------------------------------------------------------------------------------------------------------------------------\\
 
@@ -190,7 +213,81 @@ Game.Update = function() {
         NFB.Draw.image(Game.Objects.SpriteSheet, 75, NFB.Height - Game.Objects.Ground[3] - Game.Objects.SettingsButton[3], Game.Objects.SettingsButton);
         NFB.Draw.image(Game.Objects.SpriteSheet, 34, NFB.Height - 10, Game.Objects.CreditsStuff[0]);
         NFB.Draw.image(Game.Objects.SpriteSheet, 44, NFB.Height - 17, Game.Objects.CreditsStuff[1]);
+
+        // Lets Make the Bird Move!
+
+        if (Game.Bird.X >= NFB.Width + 10) {
+            Game.Bird.X = -30;
+        }
+        Game.Bird.X++;
     }
 
-    setTimeout(Game.Update, 100);
+    if (Game.Status.room == 1) {
+        NFB.Draw.image(Game.Objects.SpriteSheet, NFB.Width / 2 - (Game.Objects.Pipe[0][2] / 2), (Game.Pipes.Y - 20) - Game.Objects.Pipe[0][3], Game.Objects.Pipe[0]);
+        NFB.Draw.image(Game.Objects.SpriteSheet, NFB.Width / 2 - (Game.Objects.Pipe[1][2] / 2), Game.Pipes.Y + 20, Game.Objects.Pipe[1]);
+
+        NFB.Draw.image(Game.Objects.SpriteSheet, 0, NFB.Height - Game.Objects.Ground[3], Game.Objects.Ground);
+
+        NFB.Draw.text(Game.Status.score, NFB.Width / 2 - 10, 10, "#fffe")
+
+        if (Game.Status.GameStage == 0) {
+            NFB.Draw.image(Game.Objects.SpriteSheet, 27.5, 40, Game.Objects.Signs[0]);
+        }
+
+        if (Game.Status.GameStage == 1) {
+            if (Game.Bird.X >= NFB.Width + 10) {
+                Game.Bird.X = -30;
+            }
+
+            if (Game.Bird.X + (Game.Objects.BirdSprites[0][2] - 2) == NFB.Width / 2 - (Game.Objects.Pipe[0][2] / 2)) {
+                if (Game.Bird.Y > Game.Pipes.Y - 20 && Game.Bird.Y < Game.Pipes.Y + 20) {
+                    Game.Status.score++;
+                    console.log("the bird survived")
+                } else {
+                    Game.Status.room = 2;
+                    console.log("the bird crashed")
+                }
+            }
+
+            Game.Bird.X++;
+        }
+
+        NFB.Draw.image(Game.Objects.SpriteSheet, Game.Bird.X, Game.Bird.Y, Game.Objects.BirdSprites[Game.Bird.CurrentSprite]); // Now the Bird!
+    }
+    
+    if (Game.Status.room == 2) {
+        NFB.Draw.image(Game.Objects.SpriteSheet, NFB.Width / 2 - (Game.Objects.Pipe[0][2] / 2), (Game.Pipes.Y - 20) - Game.Objects.Pipe[0][3], Game.Objects.Pipe[0]);
+        NFB.Draw.image(Game.Objects.SpriteSheet, NFB.Width / 2 - (Game.Objects.Pipe[1][2] / 2), Game.Pipes.Y + 20, Game.Objects.Pipe[1]);
+
+        NFB.Draw.image(Game.Objects.SpriteSheet, 0, NFB.Height - Game.Objects.Ground[3], Game.Objects.Ground);
+
+        NFB.Draw.text(Game.Status.score, NFB.Width / 2 - 10, 10, "#fffe")
+
+        
+        NFB.Draw.image(Game.Objects.SpriteSheet, 27.5, 40, Game.Objects.Signs[1]);
+        
+    }
+
+    // This is Just for the Bird's Animation
+    if (Game.Bird.AnimFrame > 10) {
+        Game.Bird.FlapDirection = "Down";
+    } else if (Game.Bird.AnimFrame < 0) {
+        Game.Bird.FlapDirection = "Up";
+    }
+
+    if (Game.Bird.FlapDirection == "Up") {
+        Game.Bird.AnimFrame++;
+    } else {
+        Game.Bird.AnimFrame--;
+    }
+
+    if (Game.Bird.AnimFrame == 0) {
+        Game.Bird.CurrentSprite = 0;
+    } else if (Game.Bird.AnimFrame == 5) {
+        Game.Bird.CurrentSprite = 1;
+    } else if (Game.Bird.AnimFrame == 10) {
+        Game.Bird.CurrentSprite = 2;
+    }
+
+    setTimeout(Game.Update, 16);
 }
